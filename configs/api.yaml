@@ -1,0 +1,15 @@
+supported_pkce:
+  - S256
+  - plain
+enabled_scopes:
+  - name: "test_scope"
+    description: "this is test scope for testing purposes"
+  - name: "other_test_scope"
+    description: "Another one test scope"
+origins:
+  - "https://localhost"
+  - "http://localhost"
+  - "https://localhost:8000"
+  - "http://localhost:8000"
+  - "https://localhost:8080"
+  - "http://localhost:8080"

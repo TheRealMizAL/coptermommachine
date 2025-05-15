@@ -1,0 +1,176 @@
+version: "3.9"
+name: oidc_provider
+
+
+services:
+  redis:
+    image: redis:8.0-rc1-alpine3.21
+    container_name: oidc_redis
+    volumes:
+      - redis_data:/data
+      - ./configs/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./configs/users.acl:/usr/local/etc/redis/users.acl
+    command: redis-server /usr/local/etc/redis/redis.conf
+    environment:
+      DEFAULT_PASS: $default_redis_pass
+    expose:
+      - "6379"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+        window: 20s
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$DEFAULT_PASS", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - redis_network
+
+  pgadmin:
+    image: dpage/pgadmin4:9.2.0
+    container_name: oidc_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: oidc_admin@hsg.ru
+      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/PGADMIN_PASSWORD
+      PGADMIN_LISTEN_ADDRESS: 0.0.0.0
+    ports:
+      - target: 80
+        published: 1024
+        protocol: tcp
+        host_ip: 127.0.0.1
+        mode: host
+    secrets:
+      - source: pgadmin_password
+        target: PGADMIN_PASSWORD
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+        window: 60s
+    healthcheck:
+      test: ["CMD", "wget", "-O", "-", "http://localhost:80/misc/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - external
+
+  api:
+    container_name: oidc_provider_api
+    build:
+      context: .
+      dockerfile: api.Dockerfile
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - target: 8000
+        published: 8000
+        protocol: tcp
+        host_ip: 127.0.0.1
+        mode: host
+    environment:
+      dev: False
+    secrets:
+      - source: postgres_host
+        target: POSTGRES_HOST
+      - source: postgres_port
+        target: POSTGRES_PORT
+      - source: postgres_user
+        target: POSTGRES_USER
+      - source: postgres_password
+        target: POSTGRES_PASSWORD
+      - source: postgres_db
+        target: POSTGRES_DB
+      - source: redis_host
+        target: REDIS_HOST
+      - source: redis_port
+        target: REDIS_PORT
+      - source: redis_user
+        target: REDIS_USER
+      - source: redis_password
+        target: REDIS_PASSWORD
+    read_only: true
+    cap_drop:
+      - ALL
+    user: 416:416
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+        window: 60s
+    healthcheck:
+      test: [ "CMD", "curl", "-head", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - redis_network
+      - external
+
+networks:
+  redis_network:
+    internal: true
+    enable_ipv6: false
+  external:
+    internal: false
+    enable_ipv6: false
+
+volumes:
+  redis_data:
+
+configs:
+  api_config:
+    file: ./configs/api_config.cfg
+
+secrets:
+  postgres_host:
+    file: ./secrets/postgres_host
+  postgres_port:
+    file: ./secrets/postgres_port
+  postgres_user:
+    file: ./secrets/postgres_user
+  postgres_password:
+    file: ./secrets/postgres_password
+  postgres_db:
+    file: ./secrets/postgres_db
+
+  redis_host:
+    file: ./secrets/redis_host
+  redis_port:
+    file: ./secrets/redis_port
+  redis_user:
+    file: ./secrets/redis_user
+  redis_password:
+    file: ./secrets/redis_password
+
+  pgadmin_password:
+    file: ./secrets/pgadmin_password

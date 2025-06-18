@@ -8,12 +8,12 @@ class AnyHttpsUrl(AnyUrl):
     * Host not required
     """
 
-    _constraints = UrlConstraints(allowed_schemes=['https'])
+    _constraints = UrlConstraints(allowed_schemes=['https', 'http'])
 
 
 class HttpsUrl(AnyUrl):
 
-    _constraints = UrlConstraints(max_length=2083, allowed_schemes=['https'])
+    _constraints = UrlConstraints(max_length=2083, allowed_schemes=['https', 'http'])
 
     @property
     def host_with_scheme(self):

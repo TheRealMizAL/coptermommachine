@@ -5,10 +5,9 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Query, Form
 from fastapi.responses import RedirectResponse
 from passlib.pwd import genword
-from pydantic import UUID4
+from pydantic import UUID4, AnyHttpUrl
 from tortoise.transactions import in_transaction
 
-from oidc_models import HttpsUrl
 from registration.db_models import ClientMeta
 from settings import _api_settings
 from utils.redis_client import _redis
@@ -26,7 +25,7 @@ async def auth_helper(
         state: str,
         app_token: str,
         code_challange_method: Literal["S256", "plain"] = "plain",
-        redirect_uri: HttpsUrl | None = None,
+        redirect_uri: AnyHttpUrl | None = None,
         scope: str | None = None
 ):
     async with in_transaction():
@@ -51,6 +50,7 @@ async def auth_helper(
                     redirect_uri=redirect_uri
             )
         allowed_scopes = [scope.scope async for scope in client.scopes.all()]  # noqa
+        scope = scope or ''
         for req_scope in scope.split(' '):
             if req_scope not in _api_settings.compact_scopes:
                 raise InvalidScopeError(
@@ -89,7 +89,7 @@ async def get_auth_handeler(
         state: Annotated[str, Query()],
         app_token: Annotated[str, Query()],
         code_challange_method: Annotated[Literal["S256", "plain"], Query()] = "plain",
-        redirect_uri: Annotated[HttpsUrl | None, Query()] = None,
+        redirect_uri: Annotated[AnyHttpUrl | None, Query()] = None,
         scope: Annotated[str | None, Query()] = None,
 ):
     return await auth_helper(
@@ -112,7 +112,7 @@ async def post_auth_handler(
         state: Annotated[str, Form()],
         app_token: Annotated[str, Form()],
         code_challange_method: Annotated[Literal["S256", "plain"], Form()] = "plain",
-        redirect_uri: Annotated[HttpsUrl | None, Form()] = None,
+        redirect_uri: Annotated[AnyHttpUrl | None, Form()] = None,
         scope: Annotated[str | None, Form()] = None,
 ):
     return await auth_helper(
@@ -129,16 +129,14 @@ async def post_auth_handler(
 
 @core_router.post('/token')
 async def token_handler(
-        grant_type: Annotated[Literal["authorization_code"], Query()],
-        code: Annotated[str, Query()],
-        code_vierfier: Annotated[str, Query()],
-        redirect_uri: Annotated[HttpsUrl | None, Query()] = None,
-        client_id: Annotated[UUID4, Query()] = None
+        grant_type: Annotated[Literal["authorization_code"], Form()],
+        code: Annotated[str, Form()],
+        code_vierfier: Annotated[str, Form()],
+        redirect_uri: Annotated[AnyHttpUrl | None, Form()] = None,
+        client_id: Annotated[UUID4, Form()] = None
 ) -> AppTokenResponse:
     if grant_type != "authorization_code":
         raise InvalidGrantError
-
-    client_auth_session = await _redis.client.get(f'session:{client_id}')
 
     return AppTokenResponse(
             access_token='access_token',

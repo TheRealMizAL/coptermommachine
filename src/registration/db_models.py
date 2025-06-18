@@ -10,25 +10,25 @@ class RedirectURIs(Model):
 class ClientGrantTypes(Model):
     client: fields.ForeignKeyRelation["ClientMeta"] = fields.ForeignKeyField('core.ClientMeta',
                                                                              related_name='grant_types', pk=True)
-    grant_type = fields.CharField(max_length=43, unique=True)
+    grant_type = fields.CharField(max_length=43)
 
 
 class ClientResponseTypes(Model):
     client: fields.ForeignKeyRelation["ClientMeta"] = fields.ForeignKeyField('core.ClientMeta',
                                                                              related_name='response_types', pk=True)
-    response_type = fields.CharField(max_length=43, unique=True)
+    response_type = fields.CharField(max_length=43)
 
 
 class ClientScopes(Model):
     client: fields.ForeignKeyRelation["ClientMeta"] = fields.ForeignKeyField('core.ClientMeta',
                                                                              related_name='scopes', pk=True)
-    scope = fields.CharField(max_length=256, unique=True)
+    scope = fields.CharField(max_length=256)
 
 
 class ClientContacts(Model):
     client: fields.ForeignKeyRelation["ClientMeta"] = fields.ForeignKeyField('core.ClientMeta',
                                                                              related_name='contacts', pk=True)
-    contact = fields.CharField(max_length=256, unique=True)
+    contact = fields.CharField(max_length=256)
 
 
 class ClientJWKs(Model):

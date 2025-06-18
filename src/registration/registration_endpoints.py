@@ -39,26 +39,32 @@ async def register_client(response: Response, client_meta: ClientRegistrationMet
                 error_description="Client with given software_id and verison_id already exists",
                 state=client_meta.state
         )
-    await ClientGrantTypes.bulk_create(
-            [ClientGrantTypes(client=client, grant_type=grant_type) for grant_type in client_meta.grant_types]
-    )
-    await ClientResponseTypes.bulk_create(
-            [ClientResponseTypes(client=client, response_type=response_type) for response_type in
-             client_meta.response_types]
-    )
-    await ClientScopes.bulk_create(
-            [ClientScopes(client=client, scope=scope) for scope in client_meta.scope]
-    )
-    await ClientContacts.bulk_create(
-            [ClientContacts(client=client, contact=contact) for contact in client_meta.contacts]
-    )
-    await ClientJWKs.bulk_create(
-            [ClientJWKs(client=client, jwk=jwk.model_dump_json(exclude_none=True, exclude_unset=True)) for jwk in
-             client_meta.jwks]
-    )
-    await RedirectURIs.bulk_create(
-            [RedirectURIs(client=client, uri=uri) for uri in client_meta.redirect_uris]
-    )
+    if client_meta.grant_types:
+        await ClientGrantTypes.bulk_create(
+                [ClientGrantTypes(client=client, grant_type=grant_type) for grant_type in client_meta.grant_types]
+        )
+    if client_meta.response_types:
+        await ClientResponseTypes.bulk_create(
+                [ClientResponseTypes(client=client, response_type=response_type) for response_type in
+                 client_meta.response_types]
+        )
+    if client_meta.scope:
+        await ClientScopes.bulk_create(
+                [ClientScopes(client=client, scope=scope) for scope in client_meta.scope]
+        )
+    if client_meta.contacts:
+        await ClientContacts.bulk_create(
+                [ClientContacts(client=client, contact=contact) for contact in client_meta.contacts]
+        )
+    if client_meta.jwks:
+        await ClientJWKs.bulk_create(
+                [ClientJWKs(client=client, jwk=jwk.model_dump_json(exclude_none=True, exclude_unset=True)) for jwk in
+                 client_meta.jwks]
+        )
+    if client_meta.redirect_uris:
+        await RedirectURIs.bulk_create(
+                [RedirectURIs(client=client, uri=uri) for uri in client_meta.redirect_uris]
+        )
     client_secret = genword(entropy='secure', length=30)
     now_ts = datetime.datetime.now(datetime.UTC).timestamp()
     await ClientCredentials.create(

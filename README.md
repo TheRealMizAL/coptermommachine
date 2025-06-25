@@ -14,7 +14,7 @@
 5. **Обновите** apk командой ```apk update && apk upgrade```
 6. **Установите** git командой ```apk add git```
 7. **Скачайте** код из репозиторий командой ```git clone https://github.com/TheRealMizAL/coptermommachine```
-8. **Предоставьте** право использования скрипта командой ```chmod +X ./coptermommachine/scripts/setup_env.sh```
+8. **Предоставьте** право использования скрипта командой ```chmod +x ./coptermommachine/scripts/setup_env.sh```
 9. **Запустите** скрипт
 10. В результате выполнения скрипта в систему **установятся** PostgreSQL и Docker в rootless режиме, будет произведена базовая настройка безопасности и включен файрволл
 11. 

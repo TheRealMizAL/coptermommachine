@@ -46,8 +46,8 @@ echo "dockeruser:100000:65536" > /etc/subgid
 
 modprobe nf_tables || { echo "nf_tables module not found, exiting..."; exit 1; }
 echo "nf_tables" >> /etc/modules
-echo "ip_tables" >> /etc/modules
 modprobe ip_tables || { echo "ip_tables module not found, exiting..."; exit 1; }
+echo "ip_tables" >> /etc/modules
 
 su - dockeruser -c "curl -fsSL https://get.docker.com/rootless | sh"
 
@@ -62,7 +62,7 @@ supervisor=\"supervise-daemon\"
 command=\"/home/dockeruser/bin/dockerd-rootless.sh\"
 command_args=\"\"
 command_user=\"dockeruser\"
-supervise_daemon_args=\" -e PATH=\"/home/dockeruser/bin:/sbin:/usr/sbin:$PATH\" -e HOME=\"/home/dockeruser\" -e XDG_RUNTIME_DIR=\"/home/dockeruser/.docker/run\"\"
+supervise_daemon_args=\" -e PATH=\\\"/home/dockeruser/bin:/sbin:/usr/sbin:$PATH\\\" -e HOME=\\\"/home/dockeruser\\\" -e XDG_RUNTIME_DIR=\\\"${RUNTIME_DIR}\\\"\"
 
 reload() {
     ebegin \"Reloading $RC_SVCNAME\"

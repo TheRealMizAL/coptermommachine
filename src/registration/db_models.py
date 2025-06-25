@@ -41,6 +41,7 @@ class ClientCredentials(Model):
     client: fields.ForeignKeyRelation["ClientMeta"] = fields.ForeignKeyField('core.ClientMeta',
                                                                              related_name='credentials', pk=True)
     client_secret = fields.CharField(max_length=256)
+    client_key = fields.CharField(max_length=256, default='Nokey')
     client_id_issued_at = fields.IntField()
     client_secret_expires_at = fields.IntField(default=0)
 
@@ -87,7 +88,8 @@ class ClientMeta(Model):
             'jwks': [jwk.jwk for jwk in self.jwks],
             'redirect_uris': [uri.uri for uri in self.redirect_uris],
             'client_secret_expires_at': creds.client_secret_expires_at,
-            'client_id_issued_at': creds.client_id_issued_at
+            'client_id_issued_at': creds.client_id_issued_at,
+            'client_key': creds.client_key
         }
 
     class Meta:

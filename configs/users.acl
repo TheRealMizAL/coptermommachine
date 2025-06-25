@@ -1,4 +1,4 @@
 user default on #42a61bb6bc62a6ff96e5c1fd6b23157de44ed6f5fc5c6d8e5e6e4463ceb4feb6 sanitize-payload ~* &* +@all
-user oidc_cache on #eb25185b6657ec9c6478415c9a31ae5d27dd10da56410bff6a291ee838a81bbe resetkeys sanitize-payload ~session:* -@all +get +set +setex +ping
+user oidc_cache on #eb25185b6657ec9c6478415c9a31ae5d27dd10da56410bff6a291ee838a81bbe resetkeys sanitize-payload ~session:* -@all +get +set +setex +ping +keys
 user token_manager on #a69ae21824e5590ce83123122c2c9f4c5855c696c289627f8f4a55741d218c37 resetkeys sanitize-payload ~id_tokens:* -@all +get +set +setex
 user service_manager on #f748540eb884c773c08d6e1807e854fcacd2fa56bc2480d1ced5826a259ce4a5 resetkeys sanitize-payload ~id_tokens:* -@all +get

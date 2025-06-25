@@ -1,21 +1,51 @@
 from __future__ import annotations
 
+import base64
+from datetime import datetime, timedelta, UTC
+from hashlib import sha256
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Query, Form
+import jwt
+from fastapi import APIRouter, Query, Form, Depends, Request
+from fastapi.exceptions import HTTPException
 from fastapi.responses import RedirectResponse
+from fastapi.security.utils import get_authorization_scheme_param
 from passlib.pwd import genword
 from pydantic import UUID4, AnyHttpUrl
 from tortoise.transactions import in_transaction
+from utils.crypt import app_ctx
 
-from registration.db_models import ClientMeta
+from oidc_models import AccessToken
+from registration.db_models import ClientMeta, ClientCredentials
 from settings import _api_settings
 from utils.redis_client import _redis
 from .core_exceptions import (UnauthorizedClientError, UnsupportedResponseTypeError, UnsupportedPKCEMethodError,
-                              InvalidRequest, InvalidScopeError, InvalidGrantError)
+                              InvalidRequest, InvalidScopeError, InvalidGrantError, TokenInvalidRequestError,
+                              UnauthrizedClientError)
 from .core_models import RedisChallange, AppTokenResponse
 
 core_router = APIRouter(tags=['core'])
+
+
+async def verify_access_token(request: Request):
+    authorization = request.headers.get("Authorization")
+    scheme, param = get_authorization_scheme_param(authorization)
+    if not authorization or scheme.lower() != "bearer":
+        raise HTTPException(
+                status_code=401,
+                detail="Not authenticated",
+                headers={"WWW-Authenticate": "Bearer"},
+        )
+    try:
+        token_raw = jwt.decode(param, _api_settings.jwt_secret, algorithms=[_api_settings.jwt_alg],
+                               audience=[_api_settings.iss])
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+                status_code=401,
+                detail="Invalid credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+        )
+    return AccessToken(**token_raw)
 
 
 async def auth_helper(
@@ -73,7 +103,9 @@ async def auth_helper(
                               RedisChallange(
                                       code=code,
                                       code_challange=code_challange,
-                                      method=code_challange_method
+                                      method=code_challange_method,
+                                      req_scope=scope,
+                                      redirect_uri=redirect_uri
                               ).model_dump_json())
     return RedirectResponse(
             status_code=302,
@@ -138,10 +170,49 @@ async def token_handler(
     if grant_type != "authorization_code":
         raise InvalidGrantError
 
-    return AppTokenResponse(
-            access_token='access_token',
-            token_type='Bearer',
-            refresh_token='refresh_token',
-            app_token='app_token',
-            expires_in=3600
+    redis_record = await _redis.client.get(f'session:{client_id}')
+    if not redis_record:
+        raise TokenInvalidRequestError
+    session_record: RedisChallange = RedisChallange.parse_raw(redis_record)
+
+    if str(redirect_uri) != str(session_record.redirect_uri):
+        raise TokenInvalidRequestError
+
+    if code != session_record.code:
+        raise TokenInvalidRequestError
+
+    if session_record.method == 'S256':
+        if session_record.code_challange != base64.b64encode(
+                sha256(code_vierfier.encode('utf-8')).digest()).decode('utf-8'):
+            raise TokenInvalidRequestError
+    else:
+        if session_record.code_challange != code_vierfier:
+            raise TokenInvalidRequestError
+
+    access_token = AccessToken(
+            iss=_api_settings.iss,
+            exp=int((datetime.now(UTC) + timedelta(seconds=_api_settings.access_token_lifetime)).timestamp()),
+            iat=int(datetime.now(UTC).timestamp()),
+            nbf=int(datetime.now(UTC).timestamp()),
+            sub=client_id,
+            aud=_api_settings.iss,
+            client_id=client_id,
+            scope=session_record.req_scope,
+            nonce='random_string_i_swear'
     )
+    encoded_access_token = jwt.encode(access_token.model_dump(exclude={'origins'}, mode='json'),
+                                      _api_settings.jwt_secret,
+                                      algorithm=_api_settings.jwt_alg)
+    return AppTokenResponse(
+            access_token=encoded_access_token,
+            expires_in=_api_settings.access_token_lifetime
+    )
+
+
+@core_router.get('/get_key')
+async def get_key(nonce: str,
+                  acc_token: Annotated[AccessToken, Depends(verify_access_token)]):
+    async with in_transaction():
+        if not (client_creds := await ClientCredentials.get_or_none(client_id=acc_token.client_id)):
+            raise UnauthrizedClientError()
+    return {'key': client_creds.client_key}

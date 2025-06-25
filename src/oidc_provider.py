@@ -7,6 +7,7 @@ from core import core_router
 from oidc_exceptions import OIDCError
 from registration import reg_router
 from registration.reg_exceptions import RegistrationError
+from core.core_exceptions import TokenInvalidRequestError
 from settings import _api_settings
 from tortoise_config import CONFIG
 from utils.redis_client import register_redis, _redis
@@ -42,7 +43,7 @@ async def process_oidc_exceptions(request: Request, exc: OIDCError):
         'error_description': exc.error_description,
         'state': exc.state
     }
-    if issubclass(type(exc), RegistrationError):
+    if issubclass(type(exc), (RegistrationError, TokenInvalidRequestError)):
         exc: RegistrationError
         return JSONResponse(status_code=400,
                             content=params)

@@ -12,7 +12,6 @@ class AnyHttpsUrl(AnyUrl):
 
 
 class HttpsUrl(AnyUrl):
-
     _constraints = UrlConstraints(max_length=2083, allowed_schemes=['https', 'http'])
 
     @property
@@ -29,3 +28,15 @@ class AppToken(BaseModel):
     auth_time: int
     nonce: str
     at_hash: str
+
+
+class AccessToken(BaseModel):
+    iss: HttpsUrl
+    exp: int
+    iat: int
+    nbf: int
+    sub: UUID4
+    aud: str
+    client_id: UUID4
+    scope: str
+    nonce: str

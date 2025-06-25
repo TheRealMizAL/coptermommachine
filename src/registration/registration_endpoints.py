@@ -66,10 +66,12 @@ async def register_client(response: Response, client_meta: ClientRegistrationMet
                 [RedirectURIs(client=client, uri=uri) for uri in client_meta.redirect_uris]
         )
     client_secret = genword(entropy='secure', length=30)
+    client_key = genword(entropy='secure', length=32)
     now_ts = datetime.datetime.now(datetime.UTC).timestamp()
     await ClientCredentials.create(
             client=client,
             client_secret=app_ctx.hash(client_secret),
+            client_key=client_key,
             client_id_issued_at=now_ts,
             client_secret_expires_at=now_ts + 4_838_400  # valid for 28 days
     )

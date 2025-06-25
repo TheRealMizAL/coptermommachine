@@ -41,6 +41,10 @@ class APISettings(BaseSettings):
         name: str
         description: str
 
+    access_token_lifetime: int
+    jwt_secret: str
+    jwt_alg: str
+    iss: str
     supported_pkce: list[Literal["S256", "plain"]]
     enabled_scopes: list[Scope]
     origins: list[HttpUrl]
@@ -49,6 +53,11 @@ class APISettings(BaseSettings):
     @cached_property
     def compact_scopes(self) -> list[str]:
         return [scope.name for scope in self.enabled_scopes]
+
+    @computed_field
+    @cached_property
+    def fastapi_scopes(self) -> dict[str, str]:
+        return {scope.name: scope.description for scope in self.enabled_scopes}
 
 
 def create_api_settings(settings_file_path: str | Path) -> "APISettings":

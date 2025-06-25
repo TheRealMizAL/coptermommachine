@@ -1,7 +1,6 @@
 fastapi[standard]~=0.115.12
 aerich[toml]~=0.8.2
 redis[asyncio]~=5.2.1
-pydantic-settings~=2.9.1
 dnspython~=2.7.0
 idna~=3.10
 httpcore~=1.0.8
@@ -39,6 +38,8 @@ asyncpg~=0.30.0
 python-multipart~=0.0.20
 python-dotenv~=1.1.0
 passlib~=1.7.4
-fastpbkdf2~=0.2
 setuptools~=80.0.0
 pyjwt~=2.10.1
+cryptography~=45.0.4
+numpy~=2.3.1
+pydantic-settings~=2.9.1

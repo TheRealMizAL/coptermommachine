@@ -62,7 +62,7 @@ supervisor=\"supervise-daemon\"
 command=\"/home/dockeruser/bin/dockerd-rootless.sh\"
 command_args=\"\"
 command_user=\"dockeruser\"
-supervise_daemon_args=\" -e PATH=\"/home/dockeruser/bin:/sbin:/usr/sbin:$PATH\" -e HOME=\"/home/dockeruser\" -e XDG_RUNTIME_DIR=\"/home/dockeruser/.docker/run\"\"
+supervise_daemon_args=\" -e PATH=\"/home/dockeruser/bin:/sbin:/usr/sbin:$PATH\" -e HOME=\"/home/dockeruser\" -e XDG_RUNTIME_DIR=\"${RUNTIME_DIR}\"\"
 
 reload() {
     ebegin \"Reloading $RC_SVCNAME\"

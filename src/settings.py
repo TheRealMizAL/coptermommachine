@@ -18,7 +18,7 @@ else:
 
 
 class PostgresSettings(BaseSettings):
-    model_config = SettingsConfigDict(secrets_dir=secrets_dir)
+    model_config = SettingsConfigDict(env_file=Path(__file__).parent / '..' / '.env')
 
     postgres_host: str
     postgres_port: int
@@ -28,7 +28,7 @@ class PostgresSettings(BaseSettings):
 
 
 class RedisSettings(BaseSettings):
-    model_config = SettingsConfigDict(secrets_dir=secrets_dir)
+    model_config = SettingsConfigDict(env_file=Path(__file__).parent / '..' / '.env')
 
     redis_host: str
     redis_port: int

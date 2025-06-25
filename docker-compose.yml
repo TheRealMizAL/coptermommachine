@@ -41,7 +41,7 @@ services:
     container_name: oidc_pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: oidc_admin@hsg.ru
-      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/PGADMIN_PASSWORD
+      PGADMIN_DEFAULT_PASSWORD: $PGADMIN_PASSWORD
       PGADMIN_LISTEN_ADDRESS: 0.0.0.0
     ports:
       - target: 80
@@ -49,9 +49,6 @@ services:
         protocol: tcp
         host_ip: 127.0.0.1
         mode: host
-    secrets:
-      - source: pgadmin_password
-        target: PGADMIN_PASSWORD
     deploy:
       resources:
         limits:
@@ -89,25 +86,15 @@ services:
         mode: host
     environment:
       dev: False
-    secrets:
-      - source: postgres_host
-        target: POSTGRES_HOST
-      - source: postgres_port
-        target: POSTGRES_PORT
-      - source: postgres_user
-        target: POSTGRES_USER
-      - source: postgres_password
-        target: POSTGRES_PASSWORD
-      - source: postgres_db
-        target: POSTGRES_DB
-      - source: redis_host
-        target: REDIS_HOST
-      - source: redis_port
-        target: REDIS_PORT
-      - source: redis_user
-        target: REDIS_USER
-      - source: redis_password
-        target: REDIS_PASSWORD
+      POSTGRES_HOST: $POSTGRES_HOST
+      POSTGRES_PORT: $POSTGRES_PORT
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+      POSTGRES_DB: $POSTGRES_DB
+      REDIS_HOST: $REDIS_HOST
+      REDIS_PORT: $REDIS_PORT
+      REDIS_USER: $REDIS_USER
+      REDIS_PASSWORD: $REDIS_PASSWORD
     read_only: true
     cap_drop:
       - ALL
@@ -150,27 +137,3 @@ volumes:
 configs:
   api_config:
     file: ./configs/api_config.cfg
-
-secrets:
-  postgres_host:
-    file: ./secrets/postgres_host
-  postgres_port:
-    file: ./secrets/postgres_port
-  postgres_user:
-    file: ./secrets/postgres_user
-  postgres_password:
-    file: ./secrets/postgres_password
-  postgres_db:
-    file: ./secrets/postgres_db
-
-  redis_host:
-    file: ./secrets/redis_host
-  redis_port:
-    file: ./secrets/redis_port
-  redis_user:
-    file: ./secrets/redis_user
-  redis_password:
-    file: ./secrets/redis_password
-
-  pgadmin_password:
-    file: ./secrets/pgadmin_password

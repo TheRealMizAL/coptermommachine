@@ -95,7 +95,9 @@ echo "export dev=False
 export default_redis_pass=7WGQitkQx0aSiDKOSFPjTOae9tvcppYQ7F32JWodS5XMfh01L4iAYbAocNPpbv2U" > /home/dockeruser/.profile
 
 echo "net.ipv4.ip_unprivileged_port_start=80" >> /etc/sysctl.conf
+/etc/profile.d/10add_docker.sh
 
+cd coptermommachine || { echo "coptermommachine directory not found, exiting..."; exit 1; }
 ### FIREWALL SETUP ###
 
 ufw disable

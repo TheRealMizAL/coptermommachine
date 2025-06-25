@@ -2,8 +2,8 @@
 
 apk update || { echo "Network configured incorrectly, exiting..."; exit 1; }
 apk upgrade
-apk add postgresql16 postgresql16-contrib postgresql16-openrc \
-python3 py3-pip ufw doas shadow-uidmap fuse-overlayfs iptables curl git || { echo "Community repo not configured, exiting..."; exit 1; }
+apk add nano postgresql16 postgresql16-contrib postgresql16-openrc \
+python3 py3-pip ufw docker-rootless-extras curl git || { echo "Community repo not configured, exiting..."; exit 1; }
 
 ### POSTGRESQL SETUP ###
 
@@ -52,25 +52,29 @@ echo "nf_tables" >> /etc/modules
 modprobe ip_tables || { echo "ip_tables module not found, exiting..."; exit 1; }
 echo "ip_tables" >> /etc/modules
 
-su - dockeruser -c "curl -fsSL https://get.docker.com/rootless | sh"
 
-RUNTIME_DIR="/home/dockeruser/.docker/run"
+XDG_RUNTIME_DIR="/run/user/1000"
+DOCKER_HOST="unix:/${XDG_RUNTIME_DIR}/docker.sock"
+
+touch /etc/profile.d/10add_docker.sh
+echo "export XDG_RUNTIME_DIR=\"${XDG_RUNTIME_DIR}\"
+export DOCKER_HOST=\"${DOCKER_HOST}\"
+" >> /etc/profile.d/10add_docker.sh
+chmod +x /etc/profile.d/10add_docker.sh
 
 touch /etc/init.d/docker-rootless
 echo "#!/sbin/openrc-run
 
-name=$RC_SVCNAME
+name=\$RC_SVCNAME
 description=\"Docker Application Container Engine (Rootless)\"
-supervisor=\"supervise-daemon\"
-command=\"/home/dockeruser/bin/dockerd-rootless.sh\"
-command_args=\"\"
-command_user=\"dockeruser\"
-supervise_daemon_args=\" -e PATH=\\\"/home/dockeruser/bin:/sbin:/usr/sbin:$PATH\\\" -e HOME=\\\"/home/dockeruser\\\" -e XDG_RUNTIME_DIR=\\\"${RUNTIME_DIR}\\\"\"
+supervisor=supervise-daemon
+command=/usr/bin/dockerd-rootless
+command_user=dockeruser
 
 reload() {
-    ebegin \"Reloading $RC_SVCNAME\"
-    /bin/kill -s HUP \$MAINPID
-    eend $?
+    ebegin \"Reloading configuration\"
+    \$supervisor \$RC_SVCNAME --signal HUP
+    eend \$?
 }" > /etc/init.d/docker-rootless
 
 chmod +x /etc/init.d/docker-rootless
@@ -80,9 +84,7 @@ rc-service docker-rootless start
 touch /home/dockeruser/.profile
 chown dockeruser:dockeruser /home/dockeruser/.profile
 chmod 0644 /home/dockeruser/.profile
-echo "export PATH=/home/dockeruser/bin:$PATH
-export XDG_RUNTIME_DIR=${RUNTIME_DIR}
-export dev=False
+echo "export dev=False
 export default_redis_pass=7WGQitkQx0aSiDKOSFPjTOae9tvcppYQ7F32JWodS5XMfh01L4iAYbAocNPpbv2U" > /home/dockeruser/.profile
 
 echo "net.ipv4.ip_unprivileged_port_start=80" >> /etc/sysctl.conf

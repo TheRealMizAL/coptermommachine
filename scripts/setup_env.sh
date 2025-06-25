@@ -51,7 +51,7 @@ modprobe ip_tables || { echo "ip_tables module not found, exiting..."; exit 1; }
 
 su - dockeruser -c "curl -fsSL https://get.docker.com/rootless | sh"
 
-RUNTIME_DIR="/run/user/.docker/run"
+RUNTIME_DIR="/home/dockeruser/.docker/run"
 
 touch /etc/init.d/docker-rootless
 echo "#!/sbin/openrc-run
@@ -62,7 +62,7 @@ supervisor=\"supervise-daemon\"
 command=\"/home/dockeruser/bin/dockerd-rootless.sh\"
 command_args=\"\"
 command_user=\"dockeruser\"
-supervise_daemon_args=\" -e PATH=\"/home/dockeruser/bin:/sbin:/usr/sbin:$PATH\" -e HOME=\"/home/dockeruser\" -e XDG_RUNTIME_DIR=\"${RUNTIME_DIR}\"\"
+supervise_daemon_args=\" -e PATH=\"/home/dockeruser/bin:/sbin:/usr/sbin:$PATH\" -e HOME=\"/home/dockeruser\" -e XDG_RUNTIME_DIR=\"/home/dockeruser/.docker/run\"\"
 
 reload() {
     ebegin \"Reloading $RC_SVCNAME\"

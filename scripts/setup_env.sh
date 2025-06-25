@@ -36,7 +36,10 @@ psql -U postgres -c "SELECT pg_reload_conf()"
 
 ### ROOTLESS DOCKER SETUP ###
 
-adduser dockeruser
+CREATING_USERNAME="dockeruser"
+adduser -D $CREATING_USERNAME
+echo "${CREATING_USERNAME}:${CREATING_USERNAME}" | chpasswd
+
 rc-update add cgroups && rc-service cgroups start
 
 modprobe tun || { echo "tun module not found, exiting..."; exit 1; }

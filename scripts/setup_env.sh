@@ -54,7 +54,7 @@ echo "ip_tables" >> /etc/modules
 
 
 XDG_RUNTIME_DIR="/run/user/1000"
-DOCKER_HOST="unix:/${XDG_RUNTIME_DIR}/docker.sock"
+DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
 
 touch /etc/profile.d/10add_docker.sh
 echo "export XDG_RUNTIME_DIR=\"${XDG_RUNTIME_DIR}\"
@@ -70,6 +70,13 @@ description=\"Docker Application Container Engine (Rootless)\"
 supervisor=supervise-daemon
 command=/usr/bin/dockerd-rootless
 command_user=dockeruser
+
+start_pre() {
+    export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}
+    mkdir -p \$XDG_RUNTIME_DIR
+    chown 1000:1000 \$XDG_RUNTIME_DIR
+    return 0
+}
 
 reload() {
     ebegin \"Reloading configuration\"

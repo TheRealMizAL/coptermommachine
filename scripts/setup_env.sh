@@ -25,8 +25,8 @@ psql -U postgres -c "ALTER SYSTEM SET log_statement = 'all'"
 psql -U postgres -c "ALTER USER postgres WITH ENCRYPTED PASSWORD 'postgres'"
 psql -U postgres -c "CREATE ROLE oidc_db_owner"
 psql -U postgres -c "CREATE ROLE oidc_schema_owner"
-psql -U postgres -c "CREATE USER oidc_admin WITH ENCRYPTED PASSWORD 'password' IN ROLE oidc_db_owner"
-psql -U postgres -c "CREATE USER oidc_service WITH ENCRYPTED PASSWORD 'service_password' IN ROLE oidc_db_owner"
+psql -U postgres -c "CREATE USER oidc_admin WITH ENCRYPTED PASSWORD 'oidc_admin' IN ROLE oidc_db_owner"
+psql -U postgres -c "CREATE USER oidc_service WITH ENCRYPTED PASSWORD 'oidc_service' IN ROLE oidc_db_owner"
 psql -U postgres -c "CREATE DATABASE oidc_provider WITH OWNER oidc_db_owner"
 psql -U postgres -c "\c oidc_provider"
 psql -U postgres -c "ALTER SCHEMA public OWNER TO oidc_schema_owner"
@@ -78,7 +78,9 @@ touch /home/dockeruser/.profile
 chown dockeruser:dockeruser /home/dockeruser/.profile
 chmod 0644 /home/dockeruser/.profile
 echo "export PATH=/home/dockeruser/bin:$PATH
-export XDG_RUNTIME_DIR=${RUNTIME_DIR}" > /home/dockeruser/.profile
+export XDG_RUNTIME_DIR=${RUNTIME_DIR}
+export dev=False
+export default_redis_pass=7WGQitkQx0aSiDKOSFPjTOae9tvcppYQ7F32JWodS5XMfh01L4iAYbAocNPpbv2U" > /home/dockeruser/.profile
 
 echo "net.ipv4.ip_unprivileged_port_start=80" >> /etc/sysctl.conf
 

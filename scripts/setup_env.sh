@@ -9,7 +9,7 @@ python3 py3-pip ufw doas shadow-uidmap fuse-overlayfs iptables curl git || { ech
 
 IP_ADDRESS=$(/sbin/ifconfig eth0 | grep 'inet addr' | cut -d: -f2 | awk '{print $1}')
 echo "
-local   all             postgres                                     scram-sha-256
+local   all             postgres                                     trust
 host    oidc_provider   oidc_admin           ${IP_ADDRESS}/32        scram-sha-256
 host    oidc_provider   oidc_service         ${IP_ADDRESS}/32        scram-sha-256" > /etc/postgresql16/pg_hba.conf || { echo "PostrgreSQL not installed, exiting..."; exit 1; }
 echo "
